@@ -3,11 +3,11 @@ Svetlana Shopova
 Simple checklist. Introducing text area
 """
 import tkinter
-from tkinter import END
+from tkinter import END, ANCHOR
 
 root = tkinter.Tk()
 root.iconbitmap("check.ico")
-root.geometry("500x500")
+root.geometry("610x500")
 root.title("Simple Checklist")
 root.resizable(0, 0)
 
@@ -38,9 +38,40 @@ def entry_return(event):
 
 def add_item():
     '''Adding a new task to the list'''
-    my_listbox.insert(END, list_entry.get())
-    list_entry.delete(0,END)
+    item = list_entry.get().strip()
+    if item and  item != "":
+        my_listbox.insert(END, item)
+        list_entry.delete(0,END)
     
+def remove_item():
+    '''Remove selected(anchor) item from the list'''
+    my_listbox.delete(ANCHOR)
+    
+def clear_list():
+    '''Clear all items from the list'''
+    my_listbox.delete(0,END)
+
+def save_list():
+    '''Save the list into a simple txt file'''
+    #open file to write
+    with open('checklist.txt', 'w')as f:
+        #listbox.get() returns a tuple....
+        list_tuple = my_listbox.get(0, END)        
+        print(list_tuple, file=f) 
+        f.close()
+    btn_clear_list.invoke()
+ 
+def open_list():
+    '''Open saved list'''
+    my_saved_list=()
+    with open('checklist.txt', 'r')as f:
+        lines = f.readlines()        
+        data = [tuple(line.strip('()').strip("'").split(',')) for line in lines]
+        my_saved_list = data[0] 
+        if len(my_saved_list) > 0:
+            for task in my_saved_list:               
+                my_listbox.insert(END, task.strip("'").strip(" ").replace("'", "").replace(")", ""))
+    f.close()
 
 ####### Define layout ############
 
@@ -58,18 +89,21 @@ list_entry = tkinter.Entry(input_frame, width=34, borderwidth=3,
                            font=my_font)
 btn_list_add_item =create_button(input_frame, text="Add Item", comm=add_item)
 
-list_entry.grid(row=0, column=0, padx=3, pady=10)
+btn_open_list = create_button(input_frame, text="Open List", comm=open_list)
+
+btn_open_list.grid(row=0, column=0, padx=5 )
+list_entry.grid(row=0, column=1, padx=5, pady=10)
 list_entry.bind("<Return>", entry_return)
-btn_list_add_item .grid(row=0, column=1, ipadx=5)
+btn_list_add_item .grid(row=0, column=2, padx=5)
 
 
 
 #Output frame layout
 scrollbar = tkinter.Scrollbar(output_frame)
 scrollbar.grid(row=0, column=1, sticky="NS")
-my_listbox = tkinter.Listbox(output_frame, height=18, width=46, borderwidth=3,
+my_listbox = tkinter.Listbox(output_frame, height=18, width=56, borderwidth=3,
            font=my_font, bg=background_color, yscrollcommand=scrollbar.set)
-my_listbox.grid(row=0,column=0,padx=6)
+my_listbox.grid(row=0,column=0,padx=(5,1))
 
 
 #Link scrollbar to the listbox
@@ -77,16 +111,16 @@ scrollbar.config(command=my_listbox.yview)
 
 
 #Button frame layout
-btn_remove_item = create_button(button_frame, text="Remove Item")
-btn_clear_list =  create_button(button_frame, text="Clear List")
-btn_save_list = create_button(button_frame, text="Save List")
+btn_remove_item = create_button(button_frame, text="Remove Item", comm=remove_item)
+btn_clear_list =  create_button(button_frame, text="Clear List", comm=clear_list)
+btn_save_list = create_button(button_frame, text="Save List", comm=save_list)
 btn_quit = create_button(button_frame, text="Quit",comm= root.destroy)
 
 
-btn_remove_item.grid(row=0, column=0,pady=15, padx=3)
-btn_clear_list.grid(row=0, column=1, padx=5)
-btn_save_list.grid(row=0, column=2, padx=5)
-btn_quit.grid(row=0, column=3, padx=5)
+btn_remove_item.grid(row=0, column=0,pady=15, padx=10, ipadx=10)
+btn_clear_list.grid(row=0, column=1, padx=10, ipadx=10)
+btn_save_list.grid(row=0, column=2, padx=10, ipadx=10)
+btn_quit.grid(row=0, column=3, padx=10, ipadx=10)
 
 
 #run main loop
