@@ -34,7 +34,7 @@ def create_button(frame, lbl, comm=None):
 def submit_number(number):
     """ Add a number or decimal to the display"""
     #Insert a number at theend of the display
-    display.delete(0,END)
+    #display.delete(0,END)
     display.insert(END, number)
     
     #Disable decimal if is inserted
@@ -55,9 +55,11 @@ def equals():
     elif operation == "-":
         value = float(previous_number) - float(display.get())
    
+    t = str(previous_number ) + " " + operation + " " + display.get() + " = " + str(value)
     display.delete(0,END)
-    display.insert(END, value)
-    monitor.config(text=value, anchor="e")
+   
+    display.insert(END, value)   
+    monitor.config(text=t, anchor="e")
     
 def operate(operator):
     """ Store the first number of the expression and the opertation
@@ -69,10 +71,11 @@ def operate(operator):
         if previous_number != 0:
             equals()
           
-        operation = operator
-        previous_number = display.get()
-        monitor.config(text=previous_number + operation, anchor="e")        
-        point.config(state=NORMAL)
+    operation = operator
+    previous_number = display.get()
+    monitor.config(text=previous_number +" " + operation, anchor="e")        
+    point.config(state=NORMAL)
+    display.delete(0, END)
 
 def square_number():
     """ Square current number"""
@@ -81,18 +84,17 @@ def square_number():
         display.delete(0,END) 
         monitor.config(text=value, anchor="e") 
         display.insert(END, value)       
-   
+        point.config(state=NORMAL)
     
 def inverse_number():       
-    if display.get() != '0' and display.get() !="":
-     
+    if display.get() != '0' and display.get() !="":     
        value = 1 / float(display.get())  
        display.delete(0,END) 
     else:
         value = "Err"  
     monitor.config(text=value, anchor="e") 
     display.insert(END, value) 
-    
+    point.config(state=NORMAL)
     
 def clear():
     global operation
@@ -101,7 +103,38 @@ def clear():
     previous_number=0
     operation=""
     monitor.config(text="", anchor="e") 
-    display.delete(0, END)    
+    display.delete(0, END)
+    point.config(state=NORMAL) 
+    
+def entry_return(event):
+    """Press "Equal" button programetically when <Enter>
+    is prssed in entry field"""
+    equal.invoke()
+
+def negate():
+    """ Negate a given Number"""
+    val = -1 * float(display.get())
+    display.delete(0, END)
+    display.insert(END, val)
+
+######### Bind number keys ##############
+root.bind("<Return>", entry_return)
+
+root.bind("0", lambda event:submit_number(0))
+root.bind("1", lambda event:submit_number(1))
+root.bind("2", lambda event:submit_number(2))
+root.bind("3", lambda event:submit_number(3))
+root.bind("4", lambda event:submit_number(4))
+root.bind("5", lambda event:submit_number(5))
+root.bind("6", lambda event:submit_number(6))
+root.bind("7", lambda event:submit_number(7))
+root.bind("8", lambda event:submit_number(8))
+root.bind("9", lambda event:submit_number(9))
+root.bind("-",lambda event: operate("-"))
+root.bind("+",lambda event: operate("+"))
+root.bind("*",lambda event: operate("*"))
+root.bind("/",lambda event: operate("/"))
+root.bind("=",equals)
 ######### Layout  ############
 
 #Frames
@@ -113,13 +146,14 @@ button_frame.pack(padx=5, pady=(3,0))
 
 #Layout for display frame
 monitor = tkinter.Label(display_frame, width=50,bg=bg_color,
-                    font=btn_font)
+                    font=("Arial", 12), fg=font_color)
 display = tkinter.Entry(display_frame, width=50,
         font=display_font, bg=bg_color,
         justify=RIGHT, borderwidth=0, fg=font_color)
+
+
 monitor.pack(padx=5, pady=(5,0))
 display.pack(padx=5,pady=(0,5))
-
 ##### Layout button frame ######
 
 # First line
@@ -175,7 +209,7 @@ three.grid(row=4, column=2, pady=1, sticky="WE")
 plus.grid(row=4, column=3, pady=1, sticky="WE")
 
 #Sixth row
-negate = create_button(button_frame,"+/-")
+negate = create_button(button_frame,"+/-", comm=negate)
 zero = create_button(button_frame,"0", comm=lambda:submit_number(0))
 point = create_button(button_frame,".", comm=lambda:submit_number("."))
 equal = tkinter.Button(button_frame, activebackground="#a3ddfb",
