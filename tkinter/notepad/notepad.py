@@ -19,6 +19,7 @@ root.config(bg="#D5D7D5")
 ########## Define fonts and colors ##########
 text_color = "#161811"
 menu_color = "#EAEBEA"
+text_background="#FFFFFF"
 dropdown_font=("Areal", 9)
 ########## Define dropdown list values #########
 families = ['Consolas','Terminal', 'Modern', 'Script', 'Courier', 'Arial', 'Calibri', 'Cambria',
@@ -26,21 +27,41 @@ families = ['Consolas','Terminal', 'Modern', 'Script', 'Courier', 'Arial', 'Cali
 font_options = ['normal', 'bold', 'italic']
 sizes = [8, 10, 12, 14, 16, 20, 24, 32, 48, 64, 72, 96]
 ########### Define functions ##########  
-
+def change_font(event):
+    """Change font of the selected text"""
+   
+    
+    if box_font_options.get() == 'normal':
+        my_font = (box_font_family.get(),box_font_size.get())
+    else:
+        my_font = (box_font_family.get(),box_font_size.get(), box_font_options.get())
+    #change the font style
+    #input_text.config(font=my_font)
+    sel_start, sel_end = input_text.tag_ranges("sel")
+    input_text.tag_add( input_text.get(sel_start, sel_end), *map(str, input_text.tag_ranges("sel")))
+    input_text.tag_config(input_text.get(sel_start, sel_end), font=my_font)    
+    
+    
 def create_dropdown(list_values, r=0, c=0, width=0):
     """Create dropdown menues for font family, font size and type"""
     dropdown = ttk.Combobox(menu_frame, value=list_values, width=width,
-              font=dropdown_font, justify='center', background=menu_color)
+              font=dropdown_font, justify='center', 
+              background=menu_color)
     dropdown.option_add('*TCombobox*Listbox.Justify', 'left')
     dropdown.set(list_values[0])
+    dropdown.bind("<<ComboboxSelected>>", change_font)    
     
-    dropdown.grid(row=r, column=c, padx=3, pady=5)    
+    dropdown.grid(row=r, column=c, padx=3, pady=5)  
+    
     return dropdown
+
+
+    
 ########## Define Layout ##########
 
 ### Frames ###
 menu_frame = tkinter.Frame(root, bg=menu_color, width=500)
-text_frame = tkinter.Frame(root, bg=text_color)
+text_frame = tkinter.Frame(root, bg=text_background)
 
 menu_frame.pack(  pady=(0,5), fill=BOTH)
 text_frame.pack(padx=5, pady=5)
@@ -96,6 +117,7 @@ font_family = StringVar()
 font_family.set(families[0])
 box_font_family = create_dropdown(families, 0, 9, width=16)
 
+
 font_size=IntVar()
 font_size.set(sizes[0])
 box_font_size = create_dropdown(sizes, 0, 10, width = 4)
@@ -103,6 +125,20 @@ box_font_size = create_dropdown(sizes, 0, 10, width = 4)
 font_option = StringVar()
 font_option.set(font_options[0])
 box_font_options = create_dropdown(font_options, 0, 11, width= 7)
+
+
+### Layout for test frame  ###
+my_font = (font_family.get(), font_size.get())
+
+# Create input_text as a scrolltext
+#Set default width and height to be more that the window size
+
+input_text = tkinter.scrolledtext.ScrolledText(text_frame,
+        bg=text_background, font=my_font, width=1000, height=100,
+    highlightthickness = 0, borde=None ) 
+
+input_text.pack(padx=5, pady=5)
+
 
 #Run the root's main loop
 root.mainloop()
