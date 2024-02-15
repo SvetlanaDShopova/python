@@ -6,7 +6,7 @@ Created on Tue Jan 23 16:53:13 2024
 """
 import tkinter
 from PIL import ImageTk, Image
-from tkinter import StringVar, BOTH, IntVar, scrolledtext, END, messagebox, filedialog, ttk, PhotoImage
+from tkinter import  BOTH, scrolledtext, END, messagebox, filedialog, ttk
 
 ########## Define window ##########
 root = tkinter.Tk()
@@ -22,11 +22,15 @@ menu_color = "#EAEBEA"
 text_background="#FFFFFF"
 dropdown_font=("Areal", 9)
 ########## Define dropdown list values #########
-families = ['Consolas','Terminal', 'Modern', 'Script', 'Courier', 'Arial', 'Calibri', 'Cambria',
-'Georgia', 'MS Gothic', 'SimSun', 'Tahoma', 'Times New Roman', 'Verdana', 'Wingdings']
+families = ['Consolas','Terminal', 'Modern', 'Script', 'Courier', 'Arial',
+            'Calibri', 'Cambria', 'Georgia', 'MS Gothic', 'SimSun', 'Tahoma',
+            'Times New Roman', 'Verdana', 'Wingdings']
 font_options = ['normal', 'bold', 'italic']
 sizes = [8, 10, 12, 14, 16, 20, 24, 32, 48, 64, 72, 96]
 ########### Define functions ##########  
+isFileOpened = False
+fileName = "test.txt"
+
 def change_font(event):
     """Change font of the selected text"""
    
@@ -55,7 +59,41 @@ def create_dropdown(list_values, r=0, c=0, width=0):
     
     return dropdown
 
+def new_note():
+    """Create a new note"""
+    #Use a message to ask user to confirm if he wants a new note
+    question = messagebox.askyesno("New Note?", "Are you sure you want to start a new note?")
+    if question == 1:        
+       #ScrolledText widget starting index is 1.0 not 0
+       input_text.delete("1.0", END)
 
+
+def save_note():
+    """Save  the given note. First three lines are reserved for 
+    font family, font size and font options"""
+    
+    global isFileOpened
+    global fileName
+    
+    #use file dialoge to allow user to decide how to name and where 
+    #to save and how to name the file
+    if isFileOpened == False:
+       save_name = filedialog.asksaveasfilename(initialdir="./",
+           title="Save as", filetypes=(("Text Files", "*.txt"),
+                                     ("All Files", "*.*")))
+       f = open(save_name, "w")
+       isFileOpened = True
+       fileName = save_name
+       print(save_name)
+    else:
+        f = open(fileName, "w")
+         
+    
+    #with open(save_name, "w") as f:
+    f.write(box_font_family.get() + "\n") 
+    f.write(str(box_font_size.get())+ "\n")
+    f.write(box_font_options.get() + "\n")
+    f.write(input_text.get("1.0", END))
     
 ########## Define Layout ##########
 
@@ -71,7 +109,8 @@ text_frame.pack(padx=5, pady=5)
 
 img_new = ImageTk.PhotoImage(Image.open("new.png"))  
 btn_new =  tkinter.Button(menu_frame, image=img_new, height=30, width=30,
-           bg=menu_color, borderwidth=0, activebackground = menu_color)
+           bg=menu_color, borderwidth=0, activebackground = menu_color,
+           command = new_note)
 btn_new.grid(row = 0, column=0, padx=5, pady=5)
 
 img_open = ImageTk.PhotoImage(Image.open("open.png"))  
@@ -81,7 +120,8 @@ btn_open.grid(row = 0, column=1, padx=5, pady=5)
 
 img_save = ImageTk.PhotoImage(Image.open("save.png"))  
 btn_save = tkinter.Button(menu_frame, image=img_save, height=30, width=30,
-        bg=menu_color, borderwidth=0, activebackground = menu_color)
+        bg=menu_color, borderwidth=0, activebackground = menu_color,
+        command=save_note)
 btn_save.grid(row = 0, column=2, padx=5, pady=5)
 
 img_print = ImageTk.PhotoImage(Image.open("print.png"))  
@@ -113,30 +153,28 @@ btn_paste.grid(row = 0, column=7, padx=5, pady=5)
 separator2 = ttk.Separator(menu_frame, orient='vertical', style='TSeparator')
 separator2.grid(row=0, column=8, padx=5, pady=5, sticky="ns")
 
-font_family = StringVar()
-font_family.set(families[0])
+
 box_font_family = create_dropdown(families, 0, 9, width=16)
 
 
-font_size=IntVar()
-font_size.set(sizes[0])
-box_font_size = create_dropdown(sizes, 0, 10, width = 4)
 
-font_option = StringVar()
-font_option.set(font_options[0])
+box_font_size = create_dropdown(sizes, 0, 10, width = 4)
+box_font_size.set(sizes[2])
+
+
 box_font_options = create_dropdown(font_options, 0, 11, width= 7)
 
 
 ### Layout for test frame  ###
-my_font = (font_family.get(), font_size.get())
+my_font = (box_font_family.get(), box_font_size.get())
 
 # Create input_text as a scrolltext
 #Set default width and height to be more that the window size
 
-input_text = tkinter.scrolledtext.ScrolledText(text_frame,
+input_text = scrolledtext.ScrolledText(text_frame,
         bg=text_background, font=my_font, width=1000, height=100,
-    highlightthickness = 0, borde=None ) 
-
+        exportselection = False) 
+input_text.config(inactiveselect = input_text.cget("selectbackground"))
 input_text.pack(padx=5, pady=5)
 
 
