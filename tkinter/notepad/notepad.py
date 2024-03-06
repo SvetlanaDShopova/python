@@ -5,8 +5,10 @@ Created on Tue Jan 23 16:53:13 2024
 @author: Svetlana Shopova
 """
 import tkinter
+import tempfile
+import win32api
 from PIL import ImageTk, Image
-from tkinter import  BOTH, scrolledtext, END, messagebox, filedialog, ttk
+from tkinter import  BOTH, scrolledtext, END, messagebox, filedialog, ttk 
 
 ########## Define window ##########
 root = tkinter.Tk()
@@ -32,8 +34,7 @@ isFileOpened = False
 fileName = "test.txt"
 
 def change_font(event):
-    """Change font of the selected text"""
-   
+    """Change font of the selected text"""  
     
     if box_font_options.get() == 'normal':
         my_font = (box_font_family.get(),box_font_size.get())
@@ -41,10 +42,12 @@ def change_font(event):
         my_font = (box_font_family.get(),box_font_size.get(), box_font_options.get())
     #change the font style
     #input_text.config(font=my_font)
-    sel_start, sel_end = input_text.tag_ranges("sel")
-    input_text.tag_add( input_text.get(sel_start, sel_end), *map(str, input_text.tag_ranges("sel")))
-    input_text.tag_config(input_text.get(sel_start, sel_end), font=my_font)    
-    
+    if input_text.tag_ranges("sel"):        
+      sel_start, sel_end = input_text.tag_ranges("sel")
+      input_text.tag_add( input_text.get(sel_start, sel_end), *map(str, input_text.tag_ranges("sel")))
+      input_text.tag_config(input_text.get(sel_start, sel_end), font=my_font)    
+    else:
+      input_text.config(font=my_font)  
     
 def create_dropdown(list_values, r=0, c=0, width=0):
     """Create dropdown menues for font family, font size and type"""
@@ -94,7 +97,44 @@ def save_note():
     f.write(str(box_font_size.get())+ "\n")
     f.write(box_font_options.get() + "\n")
     f.write(input_text.get("1.0", END))
+    f.close()
+
+def open_note():
+    """Open previosly saved note.
+    First three lines of note are font family, font size, and font option.
+    First set the font then load the text."""
     
+    open_name = filedialog.askopenfilename(initialdir="./", title='Open Note',
+              filetypes=(("Text Files", "*.txt"), ("All Files", "*.*")))
+    
+    with open(open_name, 'r') as f:
+        #Clear the current text
+        input_text.delete("1.0", END)
+        
+        #First three lines are font family, font size, and font_option...
+        #The new line char must be stripped at the end of each line
+        box_font_family.set(f.readline().strip())
+        box_font_size.set(int(f.readline().strip()))
+        box_font_options.set(f.readline().strip())        
+        
+        #Call the change font for these .set() and pass an arbitrary value
+        change_font(1)
+        
+        #Read the rest of the file and insert it into tex field
+        text = f.read()
+        input_text.insert("1.0", text)
+        f.close()
+
+def print_note():
+    """Print current note"""   
+    filename = tempfile.NamedTemporaryFile(mode="w",delete=False)
+    with open(filename.name, 'w') as f:
+        f.write(input_text.get("1.0", END))
+        
+    filename.close()
+    print(filename)
+    win32api.ShellExecute(0, "print", filename.name, None, ".", 0) 
+  
 ########## Define Layout ##########
 
 ### Frames ###
@@ -115,7 +155,8 @@ btn_new.grid(row = 0, column=0, padx=5, pady=5)
 
 img_open = ImageTk.PhotoImage(Image.open("open.png"))  
 btn_open = tkinter.Button(menu_frame, image=img_open, height=30, width=30,
-        bg=menu_color, borderwidth=0, activebackground = menu_color)
+        bg=menu_color, borderwidth=0, activebackground = menu_color,
+        command=open_note)
 btn_open.grid(row = 0, column=1, padx=5, pady=5)
 
 img_save = ImageTk.PhotoImage(Image.open("save.png"))  
@@ -126,7 +167,8 @@ btn_save.grid(row = 0, column=2, padx=5, pady=5)
 
 img_print = ImageTk.PhotoImage(Image.open("print.png"))  
 btn_print = tkinter.Button(menu_frame, image=img_print, height=30, width=30,
-        bg=menu_color, borderwidth=0, activebackground = menu_color)
+        bg=menu_color, borderwidth=0, activebackground = menu_color, 
+        command=print_note)
 btn_print.grid(row = 0, column=3, padx=5, pady=5)
 
 styl = ttk.Style()
